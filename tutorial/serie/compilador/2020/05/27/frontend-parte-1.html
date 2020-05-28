@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,400i,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+<title>Frontend Parte 1</title>
+<!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Frontend Parte 1 | Your awesome title</title>
+<meta name="generator" content="Jekyll v4.0.1" />
+<meta property="og:title" content="Frontend Parte 1" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Requisitos previos" />
+<meta property="og:description" content="Requisitos previos" />
+<link rel="canonical" href="/tutorial/serie/compilador/2020/05/27/frontend-parte-1.html" />
+<meta property="og:url" content="/tutorial/serie/compilador/2020/05/27/frontend-parte-1.html" />
+<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-05-27T15:00:00-03:00" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Frontend Parte 1","dateModified":"2020-05-27T15:00:00-03:00","url":"/tutorial/serie/compilador/2020/05/27/frontend-parte-1.html","datePublished":"2020-05-27T15:00:00-03:00","mainEntityOfPage":{"@type":"WebPage","@id":"/tutorial/serie/compilador/2020/05/27/frontend-parte-1.html"},"description":"Requisitos previos","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+</head>
+<body>
+  <header class="texture-blue">
+    <div class="container"></div><div class="container">
+	<h1>Frontend Parte 1</h1>
+	<h4 class="post-description"></h4>
+	<div class="post-date" style="margin-top:20px">
+		Published on May 27, 2020
+	</div>
+	<ul class="post-tags"><li>tutorial</li><li>serie</li><li>compilador</li></ul>
+</div>
+</header>
+  <main>
+    <div class="container">
+      <div class="post-container">
+          <h1 id="requisitos-previos">Requisitos previos</h1>
+
+<p>Antes de comenzar hay que instalar Node. La instalación no tiene ninguna sorpresa, simplemente hay que descargar
+el instalador de la versión más reciente. Eso se encuentra en la página de node. Además de eso también hará falta
+un editor de texto. Yo usaré Visual Studio Code.</p>
+
+<p>Ahora que tenemos Node y nuestro editor de texto tenemos crearemos una carpeta para el proyecto. Yo le voy a llamar
+a la mía “compilador”. Luego abrimos una terminal allí y ejecutamos:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm init
+</code></pre></div></div>
+
+<p>Los valores por defecto están bien asi que podes darle Enter a todo. Ese comando crea en nuestra carpeta el
+archivo <code class="highlighter-rouge">package.json</code>. Ese archivo tiene, entre otras cosas, una lista de las dependencias de este proyecto,
+es decir, paquetes de los cuales depende para funcionar. De hecho, vamos a agregar algunos con los siguientes
+comandos:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm add ts-node
+</code></pre></div></div>
+
+<p>Esto agrega <code class="highlighter-rouge">ts-node</code> como dependencia. <code class="highlighter-rouge">ts-node</code> es el interprete <code class="highlighter-rouge">node</code> modificado para trabajar con TypeScript
+directamente. Nos ahorrará un paso a la hora de hacer pruebas.</p>
+
+<p>También necesitamos agregar TypeScript.</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm add typescript
+</code></pre></div></div>
+
+<p>Por último:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm add @types/node
+</code></pre></div></div>
+
+<p>Este paquete tiene las declaraciones de tipado de las funciones que necesitamos para interactuar con archivos, entre
+otras cosas.</p>
+
+<h1 id="punto-de-entrada">Punto de entrada</h1>
+
+<p>Creamos dentro de esa carpeta la siguiente estructura:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>compilador (raíz del proyecto)
+.
+├──src
+│   ├── backend
+│   └── frontend
+├── package.json
+</code></pre></div></div>
+
+<p>Por qué esa estructura? Porque los compiladores generalmente se dividen en dos grandes partes: el frontend y el backend.
+En compiladores grandes pueden haber etapas intermedias. A medida que aborde cada parte entraré en más detalles al 
+respecto.</p>
+
+<p>A continuación creamos en la carpeta <code class="highlighter-rouge">src</code> el archivo <code class="highlighter-rouge">compilador.ts</code>. Ese va a ser el punto de entrada del programa. Yo
+quiero usar el compilador mediante la terminal y cuando lo ejecute voy a pasar dos parámetros: la ruta al código fuente
+y la ruta donde quiero que guarde el ejecutable compilado. Dicho eso el código de <code class="highlighter-rouge">compilador.ts</code> es el siguiente:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">readFileSync</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">fs</span><span class="dl">"</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">Frontend</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./frontend/Frontend</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">Backend</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./backend/Backend</span><span class="dl">'</span>
+
+<span class="kd">const</span> <span class="nx">frontend</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Frontend</span><span class="p">()</span>
+<span class="kd">const</span> <span class="nx">backend</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Backend</span><span class="p">()</span>
+
+<span class="c1">// Tomar los argumentos de la terminal</span>
+<span class="kd">const</span> <span class="nx">argumentos</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="nx">argumentos</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Leer el codigo fuente</span>
+    <span class="kd">const</span> <span class="nx">rutaCodigoFuente</span> <span class="o">=</span> <span class="nx">argumentos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="kd">const</span> <span class="nx">codigo</span> <span class="o">=</span> <span class="nx">readFileSync</span><span class="p">(</span><span class="nx">rutaCodigoFuente</span><span class="p">,</span> <span class="dl">'</span><span class="s1">utf-8</span><span class="dl">'</span><span class="p">)</span>
+    <span class="c1">// Analizar el codigo</span>
+    <span class="kd">const</span> <span class="nx">codigoAnalizado</span> <span class="o">=</span> <span class="nx">frontend</span><span class="p">.</span><span class="nx">analizar</span><span class="p">(</span><span class="nx">codigo</span><span class="p">)</span>
+    <span class="c1">// Compilarlo</span>
+    <span class="kd">const</span> <span class="nx">ejecutable</span> <span class="o">=</span> <span class="nx">backend</span><span class="p">.</span><span class="nx">compilar</span><span class="p">(</span><span class="nx">codigoAnalizado</span><span class="p">)</span>
+    <span class="c1">// Escribir el archivo ejecutable</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">No se encontraron los argumentos necesarios para compilar.</span><span class="dl">'</span><span class="p">)</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Lo que estoy haciendo acá es diseño Top-Down. Al usar las clases Frontend y Backend (que aún no escribí) les
+estoy imponiendo restricciones: descubrí que van a tener al menos un método cada una, ya sé que reciben dichos
+métodos como entrada, y también sé que devuelven (al menos conceptualmente). Y eso es todo el código de <code class="highlighter-rouge">compilador.ts</code>.
+Bueno, casi. Aun falta rellenar los huecos que son <code class="highlighter-rouge">Frontend</code> y <code class="highlighter-rouge">Backend</code>. También deberíamos lidiar con los que errores
+que podrían ocurrir, pero haremos eso recién cuando tengamos algo que se pueda ejecutar.</p>
+
+<h1 id="frontend">Frontend</h1>
+
+<p>El frontend se encarga de tomar el código fuente en forma de texto y convertirlo a una estructura de datos que luego es 
+usada por el backend para generar el resultado final (en nuestro caso, un ejecutable). Esto se realiza en dos etapas:
+el análisis léxico y el análisis sintáctico. Convirtamos eso a código en el archivo <code class="highlighter-rouge">./frontend/Frontend.ts</code>:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="kd">class</span> <span class="nx">Frontend</span> <span class="p">{</span>
+
+    <span class="nx">analizar</span><span class="p">(</span><span class="nx">codigoFuente</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nx">any</span> <span class="p">{</span>
+      <span class="c1">// Análisis léxico</span>
+      <span class="c1">// Análisis sintáctico</span>
+      <span class="c1">// Retorno ???</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Por lo que escribimos en <code class="highlighter-rouge">compilador.ts</code> sabemos que <code class="highlighter-rouge">Frontend</code> tiene un método <code class="highlighter-rouge">analizar</code> que toma un argumento de tipo
+<code class="highlighter-rouge">string</code>. Todavía no sabemos qué devuelve asi que por ahora ponemos <code class="highlighter-rouge">any</code> como tipo de retorno.</p>
+
+<p>Que significa <code class="highlighter-rouge">analizar</code> para el frontend? Significa:</p>
+
+<ol>
+  <li>Hacer el análisis léxico: toma el código fuente y devuelve una lista de <em>tokens</em>.</li>
+  <li>Hacer el análisis sintáctico: toma la lista de tokens y la convierte a un <em>árbol sintáctico</em>.</li>
+  <li>Devolver el árbol sintáctico.</li>
+</ol>
+
+<p>Finalmente si pasamos eso a código el archivo <code class="highlighter-rouge">./frontend/Frontend.ts</code> queda así:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">AnalizadorLexico</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./AnalizadorLexico</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">AnalizadorSintactico</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./AnalizadorSintactico</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">Frontend</span> <span class="p">{</span>
+
+  <span class="kr">private</span> <span class="nx">analizadorLexico</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AnalizadorLexico</span><span class="p">()</span>
+  <span class="kr">private</span> <span class="nx">analizadorSintactico</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AnalizadorSintactico</span><span class="p">()</span>
+
+  <span class="nx">analizar</span><span class="p">(</span><span class="nx">codigoFuente</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nx">any</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">tokens</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">analizadorLexico</span><span class="p">.</span><span class="nx">analizar</span><span class="p">(</span><span class="nx">codigoFuente</span><span class="p">)</span>
+    <span class="kd">const</span> <span class="nx">arbolSintactico</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">analizadorSintactico</span><span class="p">.</span><span class="nx">analizar</span><span class="p">(</span><span class="nx">tokens</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nx">arbolSintactico</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="el-analizador-léxico">El analizador léxico</h2>
+
+<p>El análisis léxico es el proceso mediante el cual se convierte el código fuente a una cadena (o lista) de <em>tokens</em>.
+Los tokens vendrían a ser las “palabras” del vocabulario del lenguaje y son: números, nombres de variables, operadores
+(“+”, “-“), palabras reservadas, etc. Agrupar los carácteres del código fuente en diferentes tokens es realizar una
+abstracción: dejamos de ver el código como un conjunto de letras para verlo como un conjunto de palabras, en esencia.</p>
+
+<p>Bueno, como agrupamos los carácteres? Primero tomemos un programa escrito en nuestro futuro lenguaje y veamos que tipos de 
+token encontramos:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>APILAR 2
+# Esto es un comentario
+SALTAR 48
+APILAR_VAR contador
+</code></pre></div></div>
+
+<p>Ese es un programa representativo del vocabulario de nuestro lenguaje. Tenemos tokens de tipo <em>Palabra</em> (como <code class="highlighter-rouge">APILAR</code> y
+<code class="highlighter-rouge">contador</code>), tenemos dos tokens de tipo <em>Numero</em> (2 y 48), tenemos un token de tipo <em>Comentario</em> y tenemos tokens de
+tipo <em>EspacioEnBlanco</em> para los carácteres ` ` y <code class="highlighter-rouge">\n</code>.</p>
+
+<p>Pasemos a definir el tipo de dato <code class="highlighter-rouge">Token</code> y sus valores en el archivo <code class="highlighter-rouge">./frontend/Token.ts</code>.</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="nx">type</span> <span class="nx">Token</span> <span class="o">=</span> <span class="nx">Palabra</span> <span class="o">|</span> <span class="nx">Numero</span> <span class="o">|</span> <span class="nx">EspacioEnBlanco</span> <span class="o">|</span> <span class="nx">Comentario</span>
+</code></pre></div></div>
+
+<p>Acá estamos definiendo el tipo de datos <code class="highlighter-rouge">Token</code> mediante la definición de los <em>valores</em> que podría tomar. Se lee: “un Token es una Palabra o un Numero o…”. Para que se entienda mejor, sería como definir lo siguiente:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="nx">type</span> <span class="nx">NumeroEnteroPositivo</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">|</span> <span class="mi">2</span> <span class="o">|</span> <span class="mi">3</span> <span class="o">|</span> <span class="mi">4</span> <span class="c1">// etc.</span>
+</code></pre></div></div>
+
+<p>Ahora debemos definir que contiene cada uno de esos valores, su estructura. Pensemos: qué contiene un token <code class="highlighter-rouge">Palabra</code>?
+Debería contener su texto, es decir, la cadena de la palabra que representa. Esto no es al azar, sino que es porque esa cadena se usará en el análisis sintáctico para tomar decisiones. Y los token <code class="highlighter-rouge">Numero</code>? Esos necesitan su texto y, además,
+el valor número que representan. Por último, que contienen los token <em>EspacioEnBlanco</em> y <em>Comentario</em>. A pesar de que
+el espacio en blanco no es significativo como lo es, por ejemplo, en Python; y que los token <code class="highlighter-rouge">Comentario</code> solo están ahí para el programador, vamos a guardar el contenido de los mismos porque así vamos a tener una representación más fiel del
+código fuente.</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="nx">type</span> <span class="nx">Token</span> <span class="o">=</span> <span class="nx">Palabra</span> <span class="o">|</span> <span class="nx">Numero</span> <span class="o">|</span> <span class="nx">EspacioEnBlanco</span> <span class="o">|</span> <span class="nx">Comentario</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">Palabra</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">Numero</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span><span class="p">,</span>
+    <span class="na">valor</span><span class="p">:</span> <span class="nx">number</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">EspacioEnBlanco</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">Comentario</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Así damos por finalizado el tema de los token, conceptualmente. Ahora viene un detalle de implementación. Así como
+están definidos tipos de datos 3 de 4 son indistinguibles entre sí en tiempo de ejecución. Es decir, si yo te doy un
+objeto como <code class="highlighter-rouge">{ texto: "Hola" }</code> cómo sabes (sin mirar el contenido del campo “texto”) si es un valor de tipo <code class="highlighter-rouge">Palabra</code>,
+<code class="highlighter-rouge">EspacioEnBlanco</code>, o <code class="highlighter-rouge">Comentario</code>? No podés. Entonces necesitamos agregarle a todos los tokens un campo más que nos
+permita desambiguar su tipo:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="nx">type</span> <span class="nx">Token</span> <span class="o">=</span> <span class="nx">Palabra</span> <span class="o">|</span> <span class="nx">Numero</span> <span class="o">|</span> <span class="nx">EspacioEnBlanco</span> <span class="o">|</span> <span class="nx">Comentario</span>
+
+<span class="k">export</span> <span class="kr">enum</span> <span class="nx">TipoToken</span> <span class="p">{</span> <span class="nx">PALABRA</span><span class="p">,</span> <span class="nx">NUMERO</span><span class="p">,</span> <span class="nx">ESPACIO_EN_BLANCO</span><span class="p">,</span> <span class="nx">COMENTARIO</span> <span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">Palabra</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">PALABRA</span><span class="p">,</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">Numero</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">NUMERO</span><span class="p">,</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span><span class="p">,</span>
+    <span class="na">valor</span><span class="p">:</span> <span class="nx">number</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">EspacioEnBlanco</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">ESPACIO_EN_BLANCO</span><span class="p">,</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">Comentario</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">COMENTARIO</span><span class="p">,</span>
+    <span class="na">texto</span><span class="p">:</span> <span class="nx">string</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Ahora sí! Terminamos con los tokens. Pasemos al analizador léxico. Tan solo unas 100 lineas más y estamos.
+Ya sabemos que el analizador léxico debe agrupar los carácteres del código fuente en tokens pero como lo
+implementamos? Para empezar tenemos que crear el archivo <code class="highlighter-rouge">./frontend/AnalizadorLexico.ts</code> e importar todos
+los exports de <code class="highlighter-rouge">./frontend/Token</code>.</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">Token</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./Token</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">AnalizadorLexico</span> <span class="p">{</span>
+  <span class="nx">analizar</span><span class="p">(</span><span class="nx">codigoFuente</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nx">Token</span><span class="p">[]</span> <span class="p">{</span>
+    <span class="c1">// ???</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Volvamos a nuestro programa ejemplo un segundo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>APILAR 2
+# Esto es un comentario
+SALTAR 48
+APILAR_VAR contador
+</code></pre></div></div>
+
+<p>El análisis léxico se hace carácter a carácter, partiendo por el primero. El primer carácter del código fuente es <code class="highlighter-rouge">A</code> y
+sabemos que pertenece a un token tipo <code class="highlighter-rouge">Palabra</code>. Lo que podemos hacer es tomar dicho carácter y avanzar al siguiente. Si
+el próximo también es una letra entonces lo agrupamos. Seguimos así hasta encontrarnos con algo que <em>no</em> sea una letra.
+Siguiendo ese procedimiento terminaremos parados sobre el carácter <code class="highlighter-rouge">\n</code> al final de la primer línea. Ahora nos preguntamos: a qué tipo de token corresponde éste carácter? Corresponde al token tipo <code class="highlighter-rouge">EspacioEnBlanco</code>. Observemos que
+nuestro lenguaje tiene la <em>muy conveniente</em> característica de que solo basta con conocer el primer carácter de un token<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote">1</a></sup>
+para identificar a que tipo de token corresponde. Esto nos facilita el trabajo.</p>
+
+<p>Ahora tenemos que pasar eso al código. Vamos a necesitar un contador para saber cual es el carácter que está siendo 
+analizado en un momento dado y, para mantener legible al método <code class="highlighter-rouge">analizar</code> quiero armar los tokens en diferentes métodos.
+Así que el contador y el código fuente serán propiedades de clase.</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">Token</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./Token</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">AnalizadorLexico</span> <span class="p">{</span>
+
+  <span class="kr">private</span> <span class="nx">codigoFuente</span> <span class="o">=</span> <span class="dl">""</span>
+  <span class="kr">private</span> <span class="nx">indiceActual</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="nx">analizar</span><span class="p">(</span><span class="nx">codigoFuente</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nx">Token</span><span class="p">[]</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">codigoFuente</span> <span class="o">=</span> <span class="nx">codigoFuente</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="kd">const</span> <span class="nx">tokens</span><span class="p">:</span> <span class="nx">Token</span><span class="p">[]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span> <span class="o">&lt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">codigoFuente</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// Construimos el siguiente token</span>
+      <span class="kd">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tokenSiguiente</span><span class="p">()</span>
+      <span class="c1">// Lo agregamos a la lista</span>
+      <span class="nx">tokens</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">token</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">tokens</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Ese es el esqueleto del analizador léxico. Completemos ahora el método <code class="highlighter-rouge">tokenSiguiente</code>:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+   * Devuelve el próximo token de la cadena que esta siendo analizada.
+   */</span>
+  <span class="kr">private</span> <span class="nx">tokenSiguiente</span><span class="p">():</span> <span class="nx">Token</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">caracter</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span><span class="sr">/</span><span class="se">[</span><span class="sr">a-zA-Z</span><span class="se">]</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caracter</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirPalabra</span><span class="p">()</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="sr">/</span><span class="se">\d</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caracter</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirNumero</span><span class="p">()</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="sr">/</span><span class="se">\s</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caracter</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirEspacioEnBlanco</span><span class="p">()</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">caracter</span> <span class="o">==</span> <span class="dl">"</span><span class="s2">#</span><span class="dl">"</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirComentario</span><span class="p">()</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="kr">private</span> <span class="nx">caracterActual</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">codigoFuente</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="p">]</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+
+<p>Lo que estamos haciendo acá es determinar que tipo de token construir según el carácter actual. En los primeros tres casos usamos expresiones regulares<sup id="fnref:2" role="doc-noteref"><a href="#fn:2" class="footnote">2</a></sup> porque debemos ver si el caracter actual pertenece a un conjunto de carácteres. En el último caso basta con comparar contra “#”.</p>
+
+<p>Por último, cómo se construye un token? Es bastante sencillo:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="kr">private</span> <span class="nx">construirPalabra</span><span class="p">():</span> <span class="nx">Palabra</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">texto</span> <span class="o">=</span> <span class="dl">''</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="sr">/</span><span class="se">[</span><span class="sr">a-zA-Z</span><span class="se">]</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()))</span> <span class="p">{</span>
+      <span class="nx">texto</span> <span class="o">+=</span> <span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="o">++</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span> <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">PALABRA</span><span class="p">,</span> <span class="nx">texto</span> <span class="p">}</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+<p>La construcción de los otros tipos de token es casi idéntica.</p>
+
+<p>El código completo de <code class="highlighter-rouge">./frontend/AnalizadorLexico</code> es:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">Token</span><span class="p">,</span> <span class="nx">Palabra</span><span class="p">,</span> <span class="nx">Numero</span><span class="p">,</span> <span class="nx">EspacioEnBlanco</span><span class="p">,</span> <span class="nx">TipoToken</span><span class="p">,</span> <span class="nx">Comentario</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./Token</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">AnalizadorLexico</span> <span class="p">{</span>
+  
+  <span class="kr">private</span> <span class="nx">indiceActual</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="kr">private</span> <span class="nx">codigoFuente</span><span class="p">:</span> <span class="nx">string</span> <span class="o">=</span> <span class="dl">""</span>
+  
+  <span class="nx">analizar</span><span class="p">(</span><span class="nx">codigoFuente</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nx">Token</span><span class="p">[]</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">codigoFuente</span> <span class="o">=</span> <span class="nx">codigoFuente</span>
+    
+    <span class="kd">const</span> <span class="nx">tokens</span><span class="p">:</span> <span class="nx">Token</span><span class="p">[]</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">while</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span> <span class="o">&lt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">codigoFuente</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tokenSiguiente</span><span class="p">()</span>
+      <span class="nx">tokens</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">token</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="nx">tokens</span>
+  <span class="p">}</span>
+  
+  <span class="cm">/**
+  * Devuelve el proximo token de la cadena que esta siendo analizada.
+  */</span>
+  <span class="kr">private</span> <span class="nx">tokenSiguiente</span><span class="p">():</span> <span class="nx">Token</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">caracter</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span><span class="sr">/</span><span class="se">[</span><span class="sr">a-zA-Z</span><span class="se">]</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caracter</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirPalabra</span><span class="p">()</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="sr">/</span><span class="se">\d</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caracter</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirNumero</span><span class="p">()</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="sr">/</span><span class="se">\s</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caracter</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirEspacioEnBlanco</span><span class="p">()</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">caracter</span> <span class="o">==</span> <span class="dl">"</span><span class="s2">#</span><span class="dl">"</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">construirComentario</span><span class="p">()</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  
+  <span class="kr">private</span> <span class="nx">construirPalabra</span><span class="p">():</span> <span class="nx">Palabra</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">texto</span> <span class="o">=</span> <span class="dl">''</span>
+    
+    <span class="k">while</span> <span class="p">(</span><span class="sr">/</span><span class="se">[</span><span class="sr">a-zA-Z</span><span class="se">]</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()))</span> <span class="p">{</span>
+      <span class="nx">texto</span> <span class="o">+=</span> <span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="o">++</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="p">{</span> <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">PALABRA</span><span class="p">,</span> <span class="nx">texto</span> <span class="p">}</span>
+  <span class="p">}</span>
+  
+  <span class="kr">private</span> <span class="nx">construirNumero</span><span class="p">():</span> <span class="nx">Numero</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">texto</span> <span class="o">=</span> <span class="dl">''</span>
+    
+    <span class="k">while</span> <span class="p">(</span><span class="sr">/</span><span class="se">\d</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()))</span> <span class="p">{</span>
+      <span class="nx">texto</span> <span class="o">+=</span> <span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="o">++</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="p">{</span> <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">NUMERO</span><span class="p">,</span> <span class="nx">texto</span><span class="p">,</span> <span class="na">valor</span><span class="p">:</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">texto</span><span class="p">)</span> <span class="p">}</span>
+  <span class="p">}</span>
+  
+  <span class="kr">private</span> <span class="nx">construirEspacioEnBlanco</span><span class="p">():</span> <span class="nx">EspacioEnBlanco</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">texto</span> <span class="o">=</span> <span class="dl">''</span>
+    
+    <span class="k">while</span> <span class="p">(</span><span class="sr">/</span><span class="se">\s</span><span class="sr">/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()))</span> <span class="p">{</span>
+      <span class="nx">texto</span> <span class="o">+=</span> <span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="o">++</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="p">{</span> <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">ESPACIO_EN_BLANCO</span><span class="p">,</span> <span class="nx">texto</span> <span class="p">}</span>
+  <span class="p">}</span>
+  
+  <span class="kr">private</span> <span class="nx">construirComentario</span><span class="p">():</span> <span class="nx">Comentario</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">texto</span> <span class="o">=</span> <span class="dl">''</span>
+    <span class="c1">// Consumir (ignorar) el # al inicio del comentario</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="o">++</span>
+    <span class="c1">// Agrupar caracteres alfanumericos y _, ' ', '#' y \t (tabs)</span>
+    <span class="k">while</span> <span class="p">(</span><span class="sr">/</span><span class="se">\w</span><span class="sr">| |</span><span class="se">\t</span><span class="sr">|#/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()))</span> <span class="p">{</span> <span class="p">{</span>
+      <span class="nx">texto</span> <span class="o">+=</span> <span class="k">this</span><span class="p">.</span><span class="nx">caracterActual</span><span class="p">()</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="o">++</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="p">{</span> <span class="na">tipo</span><span class="p">:</span> <span class="nx">TipoToken</span><span class="p">.</span><span class="nx">COMENTARIO</span><span class="p">,</span> <span class="nx">texto</span> <span class="p">}</span>
+  <span class="p">}</span>
+  
+  <span class="kr">private</span> <span class="nx">caracterActual</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">codigoFuente</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">indiceActual</span><span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Notar que a medida que usamos los tipos <code class="highlighter-rouge">Palabra</code>, <code class="highlighter-rouge">Numero</code> y demás, los fuimos importando. Observar también que el
+método <code class="highlighter-rouge">construirComentario</code> es ligeramente diferente al resto de los que construyen tokens.</p>
+
+<p>Lo bueno del analizador léxico es que es la primer parte completa de nuestro compilador! Podemos ejecutarlo y probarlo.</p>
+
+<p>Agregar al final del archivo lo siguiente:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">cf</span> <span class="o">=</span><span class="s2">`
+APILAR 2
+# Esto es un comentario
+SALTAR 3
+`</span>
+
+<span class="kd">const</span> <span class="nx">analizador</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AnalizadorLexico</span><span class="p">()</span>
+
+<span class="kd">const</span> <span class="nx">tokens</span> <span class="o">=</span> <span class="nx">analizador</span><span class="p">.</span><span class="nx">analizar</span><span class="p">(</span><span class="nx">cf</span><span class="p">)</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">tokens</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Y ahora ejecutemos lo siguiente en una terminal en la raíz del proyecto:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npx ts-node ./src/frontend/AnalizadorLexico.ts
+</code></pre></div></div>
+
+<p>Deberíamos obtener la siguiente salida:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[
+  { tipo: 2, texto: '\n  ' },
+  { tipo: 3, texto: ' Esto es un comentario' },
+  { tipo: 2, texto: '\n  ' },
+  { tipo: 0, texto: 'APILAR' },
+  { tipo: 2, texto: ' ' },
+  { tipo: 1, texto: '2', valor: 2 },
+  { tipo: 2, texto: '\n  ' }
+]
+</code></pre></div></div>
+
+<p>Funciona! Bueno, ahora se pueden borrar esas últimas líneas que agregamos.</p>
+
+<p>Finalmente con eso damos por finalizado el analizador léxico. Aunque, tal vez te diste cuenta, no estámos considerando
+que pasa si hay un error. En el próximo post veremos como lidiar con eso.</p>
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1" role="doc-endnote">
+      <p>En qué caso no basta con el primero? Por ejemplo, si nuestros comentarios empezaran comenzaran con “//” al ver una barra no sabríamos si estamos ante el operador “división” o si estamos ante la primer barra de un comentario. El analizador léxico necesitaría mirar un carácter hacia adelante para tomar una decisión, y eso introduciría algo más de complejidad. <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:2" role="doc-endnote">
+      <p>Las expresiones regulares sirven para saber si una cadena pertenece a un conjunto de cadenas o, dicho de otra manera, nos dicen si una cadena respeta cierto patrón. <a href="#fnref:2" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+      </div>
+
+        <!-- Configure Disqus --></div>
+  </main></body>
+</html>

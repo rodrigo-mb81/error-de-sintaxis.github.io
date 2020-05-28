@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.0.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2020-05-27T21:29:12-03:00</updated><id>/feed.xml</id><title type="html">Your awesome title</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Frontend Parte 1</title><link href="/tutorial/serie/compilador/2020/05/27/frontend-parte-1.html" rel="alternate" type="text/html" title="Frontend Parte 1" /><published>2020-05-27T15:00:00-03:00</published><updated>2020-05-27T15:00:00-03:00</updated><id>/tutorial/serie/compilador/2020/05/27/frontend-parte-1</id><content type="html" xml:base="/tutorial/serie/compilador/2020/05/27/frontend-parte-1.html">&lt;h1 id=&quot;requisitos-previos&quot;&gt;Requisitos previos&lt;/h1&gt;
+
+&lt;p&gt;Antes de comenzar hay que instalar Node. La instalación no tiene ninguna sorpresa, simplemente hay que descargar
+el instalador de la versión más reciente. Eso se encuentra en la página de node. Además de eso también hará falta
+un editor de texto. Yo usaré Visual Studio Code.&lt;/p&gt;
+
+&lt;p&gt;Ahora que tenemos Node y nuestro editor de texto tenemos crearemos una carpeta para el proyecto. Yo le voy a llamar
+a la mía “compilador”. Luego abrimos una terminal allí y ejecutamos:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Los valores por defecto están bien asi que podes darle Enter a todo. Ese comando crea en nuestra carpeta el
+archivo &lt;code class=&quot;highlighter-rouge&quot;&gt;package.json&lt;/code&gt;. Ese archivo tiene, entre otras cosas, una lista de las dependencias de este proyecto,
+es decir, paquetes de los cuales depende para funcionar. De hecho, vamos a agregar algunos con los siguientes
+comandos:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm add ts-node
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Esto agrega &lt;code class=&quot;highlighter-rouge&quot;&gt;ts-node&lt;/code&gt; como dependencia. &lt;code class=&quot;highlighter-rouge&quot;&gt;ts-node&lt;/code&gt; es el interprete &lt;code class=&quot;highlighter-rouge&quot;&gt;node&lt;/code&gt; modificado para trabajar con TypeScript
+directamente. Nos ahorrará un paso a la hora de hacer pruebas.&lt;/p&gt;
+
+&lt;p&gt;También necesitamos agregar TypeScript.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm add typescript
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Por último:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm add @types/node
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Este paquete tiene las declaraciones de tipado de las funciones que necesitamos para interactuar con archivos, entre
+otras cosas.&lt;/p&gt;
+
+&lt;h1 id=&quot;punto-de-entrada&quot;&gt;Punto de entrada&lt;/h1&gt;
+
+&lt;p&gt;Creamos dentro de esa carpeta la siguiente estructura:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;compilador (raíz del proyecto)
+.
+├──src
+│   ├── backend
+│   └── frontend
+├── package.json
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Por qué esa estructura? Porque los compiladores generalmente se dividen en dos grandes partes: el frontend y el backend.
+En compiladores grandes pueden haber etapas intermedias. A medida que aborde cada parte entraré en más detalles al 
+respecto.&lt;/p&gt;
+
+&lt;p&gt;A continuación creamos en la carpeta &lt;code class=&quot;highlighter-rouge&quot;&gt;src&lt;/code&gt; el archivo &lt;code class=&quot;highlighter-rouge&quot;&gt;compilador.ts&lt;/code&gt;. Ese va a ser el punto de entrada del programa. Yo
+quiero usar el compilador mediante la terminal y cuando lo ejecute voy a pasar dos parámetros: la ruta al código fuente
+y la ruta donde quiero que guarde el ejecutable compilado. Dicho eso el código de &lt;code class=&quot;highlighter-rouge&quot;&gt;compilador.ts&lt;/code&gt; es el siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;readFileSync&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Frontend&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;./frontend/Frontend&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Backend&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;./backend/Backend&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;frontend&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Frontend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;backend&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Backend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// Tomar los argumentos de la terminal&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;argumentos&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;slice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;argumentos&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Leer el codigo fuente&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;rutaCodigoFuente&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;argumentos&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;codigo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;readFileSync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;rutaCodigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;utf-8&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Analizar el codigo&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;codigoAnalizado&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;frontend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Compilarlo&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ejecutable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;backend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;compilar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoAnalizado&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Escribir el archivo ejecutable&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;No se encontraron los argumentos necesarios para compilar.&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Lo que estoy haciendo acá es diseño Top-Down. Al usar las clases Frontend y Backend (que aún no escribí) les
+estoy imponiendo restricciones: descubrí que van a tener al menos un método cada una, ya sé que reciben dichos
+métodos como entrada, y también sé que devuelven (al menos conceptualmente). Y eso es todo el código de &lt;code class=&quot;highlighter-rouge&quot;&gt;compilador.ts&lt;/code&gt;.
+Bueno, casi. Aun falta rellenar los huecos que son &lt;code class=&quot;highlighter-rouge&quot;&gt;Frontend&lt;/code&gt; y &lt;code class=&quot;highlighter-rouge&quot;&gt;Backend&lt;/code&gt;. También deberíamos lidiar con los que errores
+que podrían ocurrir, pero haremos eso recién cuando tengamos algo que se pueda ejecutar.&lt;/p&gt;
+
+&lt;h1 id=&quot;frontend&quot;&gt;Frontend&lt;/h1&gt;
+
+&lt;p&gt;El frontend se encarga de tomar el código fuente en forma de texto y convertirlo a una estructura de datos que luego es 
+usada por el backend para generar el resultado final (en nuestro caso, un ejecutable). Esto se realiza en dos etapas:
+el análisis léxico y el análisis sintáctico. Convirtamos eso a código en el archivo &lt;code class=&quot;highlighter-rouge&quot;&gt;./frontend/Frontend.ts&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Frontend&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;any&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Análisis léxico&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Análisis sintáctico&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Retorno ???&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Por lo que escribimos en &lt;code class=&quot;highlighter-rouge&quot;&gt;compilador.ts&lt;/code&gt; sabemos que &lt;code class=&quot;highlighter-rouge&quot;&gt;Frontend&lt;/code&gt; tiene un método &lt;code class=&quot;highlighter-rouge&quot;&gt;analizar&lt;/code&gt; que toma un argumento de tipo
+&lt;code class=&quot;highlighter-rouge&quot;&gt;string&lt;/code&gt;. Todavía no sabemos qué devuelve asi que por ahora ponemos &lt;code class=&quot;highlighter-rouge&quot;&gt;any&lt;/code&gt; como tipo de retorno.&lt;/p&gt;
+
+&lt;p&gt;Que significa &lt;code class=&quot;highlighter-rouge&quot;&gt;analizar&lt;/code&gt; para el frontend? Significa:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Hacer el análisis léxico: toma el código fuente y devuelve una lista de &lt;em&gt;tokens&lt;/em&gt;.&lt;/li&gt;
+  &lt;li&gt;Hacer el análisis sintáctico: toma la lista de tokens y la convierte a un &lt;em&gt;árbol sintáctico&lt;/em&gt;.&lt;/li&gt;
+  &lt;li&gt;Devolver el árbol sintáctico.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Finalmente si pasamos eso a código el archivo &lt;code class=&quot;highlighter-rouge&quot;&gt;./frontend/Frontend.ts&lt;/code&gt; queda así:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorLexico&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;./AnalizadorLexico&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorSintactico&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;./AnalizadorSintactico&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Frontend&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;analizadorLexico&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorLexico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;analizadorSintactico&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorSintactico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;any&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;analizadorLexico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;arbolSintactico&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;analizadorSintactico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;arbolSintactico&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;el-analizador-léxico&quot;&gt;El analizador léxico&lt;/h2&gt;
+
+&lt;p&gt;El análisis léxico es el proceso mediante el cual se convierte el código fuente a una cadena (o lista) de &lt;em&gt;tokens&lt;/em&gt;.
+Los tokens vendrían a ser las “palabras” del vocabulario del lenguaje y son: números, nombres de variables, operadores
+(“+”, “-“), palabras reservadas, etc. Agrupar los carácteres del código fuente en diferentes tokens es realizar una
+abstracción: dejamos de ver el código como un conjunto de letras para verlo como un conjunto de palabras, en esencia.&lt;/p&gt;
+
+&lt;p&gt;Bueno, como agrupamos los carácteres? Primero tomemos un programa escrito en nuestro futuro lenguaje y veamos que tipos de 
+token encontramos:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;APILAR 2
+# Esto es un comentario
+SALTAR 48
+APILAR_VAR contador
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ese es un programa representativo del vocabulario de nuestro lenguaje. Tenemos tokens de tipo &lt;em&gt;Palabra&lt;/em&gt; (como &lt;code class=&quot;highlighter-rouge&quot;&gt;APILAR&lt;/code&gt; y
+&lt;code class=&quot;highlighter-rouge&quot;&gt;contador&lt;/code&gt;), tenemos dos tokens de tipo &lt;em&gt;Numero&lt;/em&gt; (2 y 48), tenemos un token de tipo &lt;em&gt;Comentario&lt;/em&gt; y tenemos tokens de
+tipo &lt;em&gt;EspacioEnBlanco&lt;/em&gt; para los carácteres ` ` y &lt;code class=&quot;highlighter-rouge&quot;&gt;\n&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Pasemos a definir el tipo de dato &lt;code class=&quot;highlighter-rouge&quot;&gt;Token&lt;/code&gt; y sus valores en el archivo &lt;code class=&quot;highlighter-rouge&quot;&gt;./frontend/Token.ts&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Numero&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;EspacioEnBlanco&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Comentario&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Acá estamos definiendo el tipo de datos &lt;code class=&quot;highlighter-rouge&quot;&gt;Token&lt;/code&gt; mediante la definición de los &lt;em&gt;valores&lt;/em&gt; que podría tomar. Se lee: “un Token es una Palabra o un Numero o…”. Para que se entienda mejor, sería como definir lo siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;NumeroEnteroPositivo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// etc.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ahora debemos definir que contiene cada uno de esos valores, su estructura. Pensemos: qué contiene un token &lt;code class=&quot;highlighter-rouge&quot;&gt;Palabra&lt;/code&gt;?
+Debería contener su texto, es decir, la cadena de la palabra que representa. Esto no es al azar, sino que es porque esa cadena se usará en el análisis sintáctico para tomar decisiones. Y los token &lt;code class=&quot;highlighter-rouge&quot;&gt;Numero&lt;/code&gt;? Esos necesitan su texto y, además,
+el valor número que representan. Por último, que contienen los token &lt;em&gt;EspacioEnBlanco&lt;/em&gt; y &lt;em&gt;Comentario&lt;/em&gt;. A pesar de que
+el espacio en blanco no es significativo como lo es, por ejemplo, en Python; y que los token &lt;code class=&quot;highlighter-rouge&quot;&gt;Comentario&lt;/code&gt; solo están ahí para el programador, vamos a guardar el contenido de los mismos porque así vamos a tener una representación más fiel del
+código fuente.&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Numero&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;EspacioEnBlanco&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Comentario&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Numero&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;valor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;EspacioEnBlanco&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Comentario&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Así damos por finalizado el tema de los token, conceptualmente. Ahora viene un detalle de implementación. Así como
+están definidos tipos de datos 3 de 4 son indistinguibles entre sí en tiempo de ejecución. Es decir, si yo te doy un
+objeto como &lt;code class=&quot;highlighter-rouge&quot;&gt;{ texto: &quot;Hola&quot; }&lt;/code&gt; cómo sabes (sin mirar el contenido del campo “texto”) si es un valor de tipo &lt;code class=&quot;highlighter-rouge&quot;&gt;Palabra&lt;/code&gt;,
+&lt;code class=&quot;highlighter-rouge&quot;&gt;EspacioEnBlanco&lt;/code&gt;, o &lt;code class=&quot;highlighter-rouge&quot;&gt;Comentario&lt;/code&gt;? No podés. Entonces necesitamos agregarle a todos los tokens un campo más que nos
+permita desambiguar su tipo:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Numero&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;EspacioEnBlanco&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Comentario&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;enum&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PALABRA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;NUMERO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ESPACIO_EN_BLANCO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;COMENTARIO&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PALABRA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Numero&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;NUMERO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;valor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;EspacioEnBlanco&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ESPACIO_EN_BLANCO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Comentario&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;COMENTARIO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ahora sí! Terminamos con los tokens. Pasemos al analizador léxico. Tan solo unas 100 lineas más y estamos.
+Ya sabemos que el analizador léxico debe agrupar los carácteres del código fuente en tokens pero como lo
+implementamos? Para empezar tenemos que crear el archivo &lt;code class=&quot;highlighter-rouge&quot;&gt;./frontend/AnalizadorLexico.ts&lt;/code&gt; e importar todos
+los exports de &lt;code class=&quot;highlighter-rouge&quot;&gt;./frontend/Token&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;./Token&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorLexico&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// ???&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Volvamos a nuestro programa ejemplo un segundo:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;APILAR 2
+# Esto es un comentario
+SALTAR 48
+APILAR_VAR contador
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;El análisis léxico se hace carácter a carácter, partiendo por el primero. El primer carácter del código fuente es &lt;code class=&quot;highlighter-rouge&quot;&gt;A&lt;/code&gt; y
+sabemos que pertenece a un token tipo &lt;code class=&quot;highlighter-rouge&quot;&gt;Palabra&lt;/code&gt;. Lo que podemos hacer es tomar dicho carácter y avanzar al siguiente. Si
+el próximo también es una letra entonces lo agrupamos. Seguimos así hasta encontrarnos con algo que &lt;em&gt;no&lt;/em&gt; sea una letra.
+Siguiendo ese procedimiento terminaremos parados sobre el carácter &lt;code class=&quot;highlighter-rouge&quot;&gt;\n&lt;/code&gt; al final de la primer línea. Ahora nos preguntamos: a qué tipo de token corresponde éste carácter? Corresponde al token tipo &lt;code class=&quot;highlighter-rouge&quot;&gt;EspacioEnBlanco&lt;/code&gt;. Observemos que
+nuestro lenguaje tiene la &lt;em&gt;muy conveniente&lt;/em&gt; característica de que solo basta con conocer el primer carácter de un token&lt;sup id=&quot;fnref:1&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;
+para identificar a que tipo de token corresponde. Esto nos facilita el trabajo.&lt;/p&gt;
+
+&lt;p&gt;Ahora tenemos que pasar eso al código. Vamos a necesitar un contador para saber cual es el carácter que está siendo 
+analizado en un momento dado y, para mantener legible al método &lt;code class=&quot;highlighter-rouge&quot;&gt;analizar&lt;/code&gt; quiero armar los tokens en diferentes métodos.
+Así que el contador y el código fuente serán propiedades de clase.&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;./Token&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorLexico&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&quot;&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Construimos el siguiente token&lt;/span&gt;
+      &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tokenSiguiente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Lo agregamos a la lista&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ese es el esqueleto del analizador léxico. Completemos ahora el método &lt;code class=&quot;highlighter-rouge&quot;&gt;tokenSiguiente&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cm&quot;&gt;/**
+   * Devuelve el próximo token de la cadena que esta siendo analizada.
+   */&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokenSiguiente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;a-zA-Z&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirPalabra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirNumero&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\s&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirEspacioEnBlanco&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirComentario&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Lo que estamos haciendo acá es determinar que tipo de token construir según el carácter actual. En los primeros tres casos usamos expresiones regulares&lt;sup id=&quot;fnref:2&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:2&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt; porque debemos ver si el caracter actual pertenece a un conjunto de carácteres. En el último caso basta con comparar contra “#”.&lt;/p&gt;
+
+&lt;p&gt;Por último, cómo se construye un token? Es bastante sencillo:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;construirPalabra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;''&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;a-zA-Z&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PALABRA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;La construcción de los otros tipos de token es casi idéntica.&lt;/p&gt;
+
+&lt;p&gt;El código completo de &lt;code class=&quot;highlighter-rouge&quot;&gt;./frontend/AnalizadorLexico&lt;/code&gt; es:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Numero&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;EspacioEnBlanco&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Comentario&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;./Token&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorLexico&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&quot;&lt;/span&gt;
+  
+  &lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;
+    
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tokenSiguiente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  
+  &lt;span class=&quot;cm&quot;&gt;/**
+  * Devuelve el proximo token de la cadena que esta siendo analizada.
+  */&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokenSiguiente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Token&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;a-zA-Z&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirPalabra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirNumero&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\s&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirEspacioEnBlanco&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;construirComentario&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;construirPalabra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Palabra&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;''&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;a-zA-Z&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PALABRA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;construirNumero&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Numero&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;''&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;NUMERO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;valor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;construirEspacioEnBlanco&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;EspacioEnBlanco&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;''&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\s&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ESPACIO_EN_BLANCO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;construirComentario&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Comentario&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;''&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Consumir (ignorar) el # al inicio del comentario&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Agrupar caracteres alfanumericos y _, ' ', '#' y \t (tabs)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;| |&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;|#/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;tipo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TipoToken&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;COMENTARIO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;texto&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  
+  &lt;span class=&quot;kr&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;caracterActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;codigoFuente&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;indiceActual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Notar que a medida que usamos los tipos &lt;code class=&quot;highlighter-rouge&quot;&gt;Palabra&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;Numero&lt;/code&gt; y demás, los fuimos importando. Observar también que el
+método &lt;code class=&quot;highlighter-rouge&quot;&gt;construirComentario&lt;/code&gt; es ligeramente diferente al resto de los que construyen tokens.&lt;/p&gt;
+
+&lt;p&gt;Lo bueno del analizador léxico es que es la primer parte completa de nuestro compilador! Podemos ejecutarlo y probarlo.&lt;/p&gt;
+
+&lt;p&gt;Agregar al final del archivo lo siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;cf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`
+APILAR 2
+# Esto es un comentario
+SALTAR 3
+`&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;analizador&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;AnalizadorLexico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;analizador&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;analizar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tokens&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y ahora ejecutemos lo siguiente en una terminal en la raíz del proyecto:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npx ts-node ./src/frontend/AnalizadorLexico.ts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Deberíamos obtener la siguiente salida:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[
+  { tipo: 2, texto: '\n  ' },
+  { tipo: 3, texto: ' Esto es un comentario' },
+  { tipo: 2, texto: '\n  ' },
+  { tipo: 0, texto: 'APILAR' },
+  { tipo: 2, texto: ' ' },
+  { tipo: 1, texto: '2', valor: 2 },
+  { tipo: 2, texto: '\n  ' }
+]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Funciona! Bueno, ahora se pueden borrar esas últimas líneas que agregamos.&lt;/p&gt;
+
+&lt;p&gt;Finalmente con eso damos por finalizado el analizador léxico. Aunque, tal vez te diste cuenta, no estámos considerando
+que pasa si hay un error. En el próximo post veremos como lidiar con eso.&lt;/p&gt;
+
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:1&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;En qué caso no basta con el primero? Por ejemplo, si nuestros comentarios empezaran comenzaran con “//” al ver una barra no sabríamos si estamos ante el operador “división” o si estamos ante la primer barra de un comentario. El analizador léxico necesitaría mirar un carácter hacia adelante para tomar una decisión, y eso introduciría algo más de complejidad. &lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:2&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;Las expresiones regulares sirven para saber si una cadena pertenece a un conjunto de cadenas o, dicho de otra manera, nos dicen si una cadena respeta cierto patrón. &lt;a href=&quot;#fnref:2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name></name></author><summary type="html">Requisitos previos</summary></entry><entry><title type="html">Tu propio lenguaje en 42 simples pasos</title><link href="/tutorial/serie/compilador/2020/05/26/lenguaje-en-42-pasos.html" rel="alternate" type="text/html" title="Tu propio lenguaje en 42 simples pasos" /><published>2020-05-26T21:58:20-03:00</published><updated>2020-05-26T21:58:20-03:00</updated><id>/tutorial/serie/compilador/2020/05/26/lenguaje-en-42-pasos</id><content type="html" xml:base="/tutorial/serie/compilador/2020/05/26/lenguaje-en-42-pasos.html">&lt;h1 id=&quot;introducción&quot;&gt;Introducción&lt;/h1&gt;
+
+&lt;p&gt;Hola! Bienvenido a la introducción para esta serie de posts titulada &lt;em&gt;Cómo crear tu propio lenguaje en 42 simples pasos&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Si estás leyendo esto probablemente me conoces personalmente y te pasé un link hacia acá, o estás interesado en saber como
+crear tu propio lenguaje de programación. En cualquier caso, una vez que hayamos terminado vas a:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Entender como funciona un compilador y que partes lo componen.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Saber como usar Node y TypeScript para crear aplicaciones de escritorio.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Qué hace falta para poder seguir estos tutoriales? Hace falta saber programar, en mayor o menor medida. Si se tiene experiencia
+con un lenguaje orientado a objetos como Java, mejor. Si no, como mínimo hace falta estar familiarizado con la sintaxis de
+C.&lt;/p&gt;
+
+&lt;p&gt;Por último, qué herramientas vamos a usar? Node.js y TypeScript. Si estás familiarizado con dichas tecnologías, mejor. Si no,
+no pasa nada, no debería hacer falta un íntimo conocimiento de ninguna para continuar. Voy a cubrir la instalación y uso de
+ambas desde el principio.&lt;/p&gt;
+
+&lt;h1 id=&quot;sobre-el-lenguaje-que-crearemos&quot;&gt;Sobre el lenguaje que crearemos&lt;/h1&gt;
+
+&lt;p&gt;Nuestro lenguaje será el primero en ser implementado para una máquina virtual nueva! Llamaremos a esta máquina…RVM. En este
+momento, si uno quiere escribir un programa que corra en RVM entonces tiene que escribirlo a mano en binario y hacer eso, la
+verdad, es bastante engorroso, para nada productivo, y propenso a errores. Entonces, para aliviar esto, vamos a crear un lenguaje
+que nos permita programar nuestra máquina de una manera más natural.&lt;/p&gt;
+
+&lt;p&gt;Como será nuestro lenguaje? Nos dejará escribir un programa usando los nombres de las instrucciones de máquina en lugar de sus
+códigos númericos y también nos dará la posibilidad de usar variables en lugar de direcciones de memoria. Ua mejora sustancial
+respecto a lo que teníamos antes. A este lenguaje le vamos a llamar RVAssembler.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2020-05-26-lenguaje-en-42-pasos/1.png&quot; alt=&quot;img&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;A la izquierda, programa en código de máquina. A la derecha, programa en RVAssembler.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Para que un programa escrito en RVAssembler pueda ser ejecutado primero hay que compilarlo, así que tendremos que escribir nuestro
+propio compilador que convierta código en RVAssembler a código de máquina.&lt;/p&gt;
+
+&lt;p&gt;Entonces, ahora que sabemos como será el lenguaje y sabiendo cuál es el objetivo de compilación estamos casi listos para arrancar.
+En el siguiente post instalaremos los requisitos y daremos inicio al proyecto.&lt;/p&gt;
+
+&lt;p&gt;Nos vemos allá!&lt;/p&gt;</content><author><name></name></author><summary type="html">Introducción</summary></entry></feed>
